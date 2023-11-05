@@ -1,5 +1,6 @@
 from image_loader import load_image
 from player import Player
+from computer_opponent import ComputerOpponent
 from ball import Ball
 import pygame as pg
 import sys
@@ -31,11 +32,8 @@ moving_player = pg.sprite.Group()
 player_1 = Player(player_1_x, player_1_y, height)
 moving_player.add(player_1)
 
-
-player_2 = load_image(
-    "game assets/Characters/Character 05 - Netherlands/PNG Sequences/Kick/Kick_000.png"
-)
-player_2 = pg.transform.scale(player_2, (200, 200))
+player_2 = ComputerOpponent(player_2_x, player_2_y, height)
+moving_player.add(player_2)
 
 ball = Ball(ball_x, ball_y, width, ball_y)
 
@@ -52,7 +50,11 @@ goal_2 = pg.transform.scale(goal_2, (100, 200))
 
 
 def add_object(object, x, y):
-    if isinstance(object, Player) or isinstance(object, Ball):
+    if (
+        isinstance(object, Player)
+        or isinstance(object, Ball)
+        or isinstance(object, ComputerOpponent)
+    ):
         window.blit(object.image, (object.rect.x, object.rect.y))
     else:
         window.blit(object, (x, y))
@@ -79,7 +81,7 @@ while running:
     add_object(goal_1, 10, 300)
     add_object(goal_2, 690, 300)
 
-    # Movement
+    # Movement for player
 
     keys = pg.key.get_pressed()
 
@@ -98,14 +100,29 @@ while running:
         player_1.kick = True
         player_1.animate(player_1.kick_sprites)
         if player_1.rect.colliderect(ball.rect):
-            ball.move_ball([4, -4])
+            ball.move_ball([2.5, -2.5])
 
     if player_1.rect.colliderect(ball.rect):
-        ball.move_ball([2, -2])
+        ball.move_ball([1.5, 0])
+
+    # Movement for computer player
+
+    if ball.rect.x > player_2.rect.x:
+        player_2.rect.x += 5
+        player_2.run_right = True
+        player_2.animate(player_2.run_left_sprites)
+    elif ball.rect.x < player_2.rect.x:
+        player_2.rect.x -= 5
+        player_2.run_left = True
+        player_2.animate(player_2.run_right_sprites)
+
+    if player_2.rect.colliderect(ball.rect):
+        ball.move_ball([-1.5, 0])
 
     # Updating objects
 
     player_1.update()
+    player_2.update()
     ball.update()
 
     # Display update
