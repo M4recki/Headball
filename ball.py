@@ -12,6 +12,7 @@ class Ball(sprite.Sprite):
         self.rect.y = y
         self.width = width
         self.height = height
+        self.kick = False
         self.gravity = 1
         self.velocity = [0, 0]
 

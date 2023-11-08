@@ -2,6 +2,7 @@ from image_loader import load_image
 from player import Player
 from computer_opponent import ComputerOpponent
 from ball import Ball
+from goal import Goal
 import pygame as pg
 import sys
 from time import sleep
@@ -40,11 +41,10 @@ ball = Ball(ball_x, ball_y, width, ball_y)
 stadium = pg.image.load("game assets/PNG/Game Background/Stadium.png")
 stadium = pg.transform.scale(stadium, (width, height))
 
-goal_1 = pg.image.load("game assets/PNG/Elements/goal 1.png")
-goal_1 = pg.transform.scale(goal_1, (100, 200))
+goal_1 = Goal(10, 300, 100, 200)
+goal_1 = pg.transform.flip(goal_1.image, True, False)
 
-goal_2 = pg.image.load("game assets/PNG/Elements/goal 2.png")
-goal_2 = pg.transform.scale(goal_2, (100, 200))
+goal_2 = Goal(690, 300, 100, 200)
 
 # Set positions
 
@@ -54,6 +54,7 @@ def add_object(object, x, y):
         isinstance(object, Player)
         or isinstance(object, Ball)
         or isinstance(object, ComputerOpponent)
+        or isinstance(object, Goal)
     ):
         window.blit(object.image, (object.rect.x, object.rect.y))
     else:
@@ -100,19 +101,19 @@ while running:
         player_1.kick = True
         player_1.animate(player_1.kick_sprites)
         if player_1.rect.colliderect(ball.rect):
-            ball.move_ball([2.5, -2.5])
+            ball.move_ball([2.5, -7])
 
     if player_1.rect.colliderect(ball.rect):
         ball.move_ball([1.5, 0])
 
-    # Movement for computer player
+    # Movement for opponent player
 
     if ball.rect.x > player_2.rect.x:
-        player_2.rect.x += 5
+        player_2.rect.x += 3
         player_2.run_right = True
         player_2.animate(player_2.run_left_sprites)
     elif ball.rect.x < player_2.rect.x:
-        player_2.rect.x -= 5
+        player_2.rect.x -= 3
         player_2.run_left = True
         player_2.animate(player_2.run_right_sprites)
 
