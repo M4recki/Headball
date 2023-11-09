@@ -3,6 +3,7 @@ from player import Player
 from computer_opponent import ComputerOpponent
 from ball import Ball
 from goal import Goal
+from score import Score
 import pygame as pg
 import sys
 from time import sleep
@@ -38,13 +39,17 @@ moving_player.add(player_2)
 
 ball = Ball(ball_x, ball_y, width, ball_y)
 
+kick_cooldown = pg.USEREVENT + 1
+kick_disabled = False
+
 stadium = pg.image.load("game assets/PNG/Game Background/Stadium.png")
 stadium = pg.transform.scale(stadium, (width, height))
 
-goal_1 = Goal(10, 300, 100, 200)
-goal_1 = pg.transform.flip(goal_1.image, True, False)
-
+goal_1 = Goal(10, 300, 100, 200, flip=True)
 goal_2 = Goal(690, 300, 100, 200)
+
+player_1_score = Score(50, 50, "game assets/Font/DaddyinspaceDEMO.otf", 32)
+player_2_score = Score(600, 50, "game assets/Font/DaddyinspaceDEMO.otf", 32)
 
 # Set positions
 
@@ -81,6 +86,15 @@ while running:
     add_object(ball, ball_x, ball_y)
     add_object(goal_1, 10, 300)
     add_object(goal_2, 690, 300)
+    player_1_score.draw(window)
+    player_2_score.draw(window)
+
+    # Check for collisions with the top part of the goals
+
+    if ball.rect.colliderect(goal_1.rect) and ball.velocity[1] > 0:
+        ball.velocity[1] = -abs(ball.velocity[1])
+    elif ball.rect.colliderect(goal_2.rect) and ball.velocity[1] > 0:
+        ball.velocity[1] = -abs(ball.velocity[1])
 
     # Movement for player
 
@@ -119,6 +133,13 @@ while running:
 
     if player_2.rect.colliderect(ball.rect):
         ball.move_ball([-1.5, 0])
+
+    if player_2.rect.colliderect(ball.rect.inflate(-20, -20)) and not kick_disabled:
+        player_2.kick = True
+        player_2.animate(player_2.kick_sprites)
+        ball.move_ball([-2.5, -7])
+        kick_disabled = True
+        pg.time.set_timer(kick_cooldown, 2000)
 
     # Updating objects
 
