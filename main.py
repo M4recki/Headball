@@ -15,11 +15,20 @@ pg.init()
 
 width, height = 800, 600
 
+font = "game assets/Font/DaddyinspaceDEMO.otf"
+
 player_1_x, player_1_y = 80, 330
 player_2_x, player_2_y = 520, 330
 ball_x, ball_y = 374, 450
 
+countdown_event = pg.USEREVENT + 2
+countdown_font = pg.font.Font(font, 100)
+countdown = 0
+countdown_text = None
+
 clock = pg.time.Clock()
+
+whistle_sound = pg.mixer.Sound("game assets/Sound/whistle.wav")
 
 window = pg.display.set_mode((width, height))
 
@@ -42,14 +51,14 @@ ball = Ball(ball_x, ball_y, width, ball_y)
 kick_cooldown = pg.USEREVENT + 1
 kick_disabled = False
 
-stadium = pg.image.load("game assets/PNG/Game Background/Stadium.png")
+stadium = load_image("game assets/PNG/Game Background/Stadium.png")
 stadium = pg.transform.scale(stadium, (width, height))
 
 goal_1 = Goal(10, 300, 100, 200, flip=True)
 goal_2 = Goal(690, 300, 100, 200)
 
-player_1_score = Score(50, 50, "game assets/Font/DaddyinspaceDEMO.otf", 32)
-player_2_score = Score(600, 50, "game assets/Font/DaddyinspaceDEMO.otf", 32)
+player_1_score = Score(50, 50, font, 32)
+player_2_score = Score(600, 50, font, 32)
 
 # Set positions
 
@@ -69,6 +78,7 @@ def add_object(object, x, y):
 # Main loop
 
 running = True
+game_paused = False
 
 while running:
     clock.tick(60)
@@ -77,6 +87,22 @@ while running:
         if event.type == pg.QUIT:
             running = False
             sys.exit()
+        elif event.type == kick_cooldown:
+            kick_disabled = False
+        elif event.type == countdown_event:
+            if countdown > 0:
+                countdown_text = countdown_font.render(
+                    str(countdown - 1), True, (255, 255, 255)
+                )
+                countdown -= 1
+            elif countdown == 0:
+                countdown_text = countdown_font.render("GO!", True, (255, 255, 255))
+                whistle_sound.play()
+                countdown -= 1
+            else:
+                pg.time.set_timer(countdown_event, 0)
+                game_paused = False
+                countdown_text = None
 
     # Adding objects to GUI
 
@@ -98,48 +124,94 @@ while running:
 
     # Movement for player
 
-    keys = pg.key.get_pressed()
+    if not game_paused:
+        keys = pg.key.get_pressed()
 
-    if keys[pg.K_w] and player_1.rect.y == 330:
-        player_1.jump = True
-        player_1.animate(player_1.jump_sprites)
-    if keys[pg.K_a] and player_1.rect.x > 50:
-        player_1.rect.x -= 5
-        player_1.run_left = True
-        player_1.animate(player_1.run_left_sprites)
-    if keys[pg.K_d] and player_1.rect.x < 550:
-        player_1.rect.x += 5
-        player_1.run_right = True
-        player_1.animate(player_1.run_right_sprites)
-    if keys[pg.K_SPACE]:
-        player_1.kick = True
-        player_1.animate(player_1.kick_sprites)
-        if player_1.rect.colliderect(ball.rect):
-            ball.move_ball([2.5, -7])
+        if keys[pg.K_w] and player_1.rect.y == 330:
+            player_1.jump = True
+            player_1.animate(player_1.jump_sprites)
+        if keys[pg.K_a] and player_1.rect.x > 50:
+            player_1.rect.x -= 5
+            player_1.run_left = True
+            player_1.animate(player_1.run_left_sprites)
+        if keys[pg.K_d] and player_1.rect.x < 550:
+            player_1.rect.x += 5
+            player_1.run_right = True
+            player_1.animate(player_1.run_right_sprites)
+        if keys[pg.K_SPACE]:
+            player_1.kick = True
+            player_1.animate(player_1.kick_sprites)
+            if player_1.rect.colliderect(ball.rect):
+                ball.move_ball([2.5, -5.5])
 
     if player_1.rect.colliderect(ball.rect):
         ball.move_ball([1.5, 0])
 
+    if player_1.rect.y > 330:
+        player_1.rect.y = 330
+
     # Movement for opponent player
 
-    if ball.rect.x > player_2.rect.x:
+    if ball.rect.x > player_2.rect.x and not game_paused:
         player_2.rect.x += 3
         player_2.run_right = True
         player_2.animate(player_2.run_left_sprites)
-    elif ball.rect.x < player_2.rect.x:
+    elif ball.rect.x < player_2.rect.x and not game_paused:
         player_2.rect.x -= 3
         player_2.run_left = True
         player_2.animate(player_2.run_right_sprites)
 
-    if player_2.rect.colliderect(ball.rect):
+    if player_2.rect.colliderect(ball.rect) and not game_paused:
         ball.move_ball([-1.5, 0])
 
-    if player_2.rect.colliderect(ball.rect.inflate(-20, -20)) and not kick_disabled:
+    if player_2.rect.colliderect(ball.rect) and not kick_disabled:
         player_2.kick = True
         player_2.animate(player_2.kick_sprites)
-        ball.move_ball([-2.5, -7])
+        ball.move_ball([-2.5, -5.5])
         kick_disabled = True
         pg.time.set_timer(kick_cooldown, 2000)
+
+    # Check if a goal has been scored
+
+    if goal_1.rect.contains(ball.rect):
+        game_paused = True
+        player_2_score.update(player_2_score.score + 1)
+
+        ball.rect.x = 374
+        ball.rect.y = 450
+        ball.velocity = [0, 0]
+
+        player_1.rect.x = player_1_x
+        player_1.rect.y = player_1_y
+
+        player_2.rect.x = player_2_x
+        player_2.rect.y = player_2_y
+        player_2.kick = False
+
+        countdown = 4
+        pg.time.set_timer(countdown_event, 1000)
+    elif goal_2.rect.contains(ball.rect):
+        game_paused = True
+        player_1_score.update(player_1_score.score + 1)
+
+        ball.rect.x = 374
+        ball.rect.y = 450
+        ball.velocity = [0, 0]
+
+        player_1.rect.x = player_1_x
+        player_1.rect.y = player_1_y
+
+        player_2.rect.x = player_2_x
+        player_2.rect.y = player_2_y
+        player_2.kick = False
+
+        countdown = 4
+        pg.time.set_timer(countdown_event, 1000)
+
+    # Countdown timer after goal has been scored
+
+    if countdown_text:
+        window.blit(countdown_text, (ball_x, height // 2))
 
     # Updating objects
 
