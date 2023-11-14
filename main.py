@@ -15,6 +15,8 @@ pg.init()
 
 width, height = 800, 600
 
+window = pg.display.set_mode((width, height))
+
 font = "game assets/Font/DaddyinspaceDEMO.otf"
 
 player_1_x, player_1_y = 80, 330
@@ -23,14 +25,16 @@ ball_x, ball_y = 374, 450
 
 countdown_event = pg.USEREVENT + 2
 countdown_font = pg.font.Font(font, 100)
-countdown = 0
+countdown = 4
 countdown_text = None
 
-clock = pg.time.Clock()
+# Load game assets
 
 whistle_sound = pg.mixer.Sound("game assets/Sound/whistle.wav")
-
-window = pg.display.set_mode((width, height))
+score_sound = pg.mixer.Sound(
+    "game assets/Sound/mixkit-winning-a-coin-video-game-2069.wav"
+)
+countdown_sound = pg.mixer.Sound("game assets/Sound/mixkit-soft-bell-countdown-919.wav")
 
 pg.display.set_caption("Headball by Marek B")
 
@@ -38,6 +42,8 @@ pygame_icon = load_image("game assets/PNG/PSD/Game Icon.png")
 pg.display.set_icon(pygame_icon)
 
 # Objects
+
+clock = pg.time.Clock()
 
 moving_player = pg.sprite.Group()
 player_1 = Player(player_1_x, player_1_y, height)
@@ -75,10 +81,11 @@ def add_object(object, x, y):
         window.blit(object, (x, y))
 
 
-# Main loop
-
 running = True
-game_paused = False
+game_paused = True
+pg.time.set_timer(countdown_event, 1000)
+
+# Main loop
 
 while running:
     clock.tick(60)
@@ -91,11 +98,13 @@ while running:
             kick_disabled = False
         elif event.type == countdown_event:
             if countdown > 0:
+                countdown_sound.play()
                 countdown_text = countdown_font.render(
                     str(countdown - 1), True, (255, 255, 255)
                 )
                 countdown -= 1
             elif countdown == 0:
+                countdown_sound.stop()
                 countdown_text = countdown_font.render("GO!", True, (255, 255, 255))
                 whistle_sound.play()
                 countdown -= 1
@@ -114,13 +123,6 @@ while running:
     add_object(goal_2, 690, 300)
     player_1_score.draw(window)
     player_2_score.draw(window)
-
-    # Check for collisions with the top part of the goals
-
-    if ball.rect.colliderect(goal_1.rect) and ball.velocity[1] > 0:
-        ball.velocity[1] = -abs(ball.velocity[1])
-    elif ball.rect.colliderect(goal_2.rect) and ball.velocity[1] > 0:
-        ball.velocity[1] = -abs(ball.velocity[1])
 
     # Movement for player
 
@@ -174,6 +176,7 @@ while running:
     # Check if a goal has been scored
 
     if goal_1.rect.contains(ball.rect):
+        score_sound.play()
         game_paused = True
         player_2_score.update(player_2_score.score + 1)
 
@@ -191,6 +194,7 @@ while running:
         countdown = 4
         pg.time.set_timer(countdown_event, 1000)
     elif goal_2.rect.contains(ball.rect):
+        score_sound.play()
         game_paused = True
         player_1_score.update(player_1_score.score + 1)
 
