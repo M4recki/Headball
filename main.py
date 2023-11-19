@@ -54,7 +54,7 @@ moving_player.add(player_2)
 
 ball = Ball(ball_x, ball_y, width, ball_y)
 
-kick_cooldown = pg.USEREVENT + 1
+kick_cooldown = pg.USEREVENT + 3
 kick_disabled = False
 
 stadium = load_image("game assets/PNG/Game Background/Stadium.png")
@@ -140,17 +140,22 @@ while running:
             player_1.rect.x += 5
             player_1.run_right = True
             player_1.animate(player_1.run_right_sprites)
-        if keys[pg.K_SPACE]:
+        if (
+            keys[pg.K_SPACE]
+            and not kick_disabled
+            and player_1.rect.colliderect(ball.rect)
+        ):
             player_1.kick = True
             player_1.animate(player_1.kick_sprites)
-            if player_1.rect.colliderect(ball.rect):
-                ball.move_ball([2.5, -5.5])
+            ball.move_ball([2.5, -15.5])
+            kick_disabled = True
+            pg.time.set_timer(kick_cooldown, 1)
 
-    if player_1.rect.colliderect(ball.rect):
-        ball.move_ball([1.5, 0])
+        if player_1.rect.colliderect(ball.rect):
+            ball.move_ball([1.5, 0])
 
-    if player_1.rect.y > 330:
-        player_1.rect.y = 330
+        if player_1.rect.y > 330:
+            player_1.rect.y = 330
 
     # Movement for opponent player
 
@@ -162,16 +167,17 @@ while running:
         player_2.rect.x -= 3
         player_2.run_left = True
         player_2.animate(player_2.run_right_sprites)
-
+    if player_2.rect.y < 200 and not game_paused:
+        player_2.jump()
+        player_2.animate(player_2.jump_sprites)
     if player_2.rect.colliderect(ball.rect) and not game_paused:
         ball.move_ball([-1.5, 0])
-
     if player_2.rect.colliderect(ball.rect) and not kick_disabled:
         player_2.kick = True
         player_2.animate(player_2.kick_sprites)
-        ball.move_ball([-2.5, -5.5])
+        ball.move_ball([2.5, -15.5])
         kick_disabled = True
-        pg.time.set_timer(kick_cooldown, 2000)
+        pg.time.set_timer(kick_cooldown, 50)
 
     # Check if a goal has been scored
 

@@ -16,10 +16,14 @@ class Ball(sprite.Sprite):
         self.gravity = 1
         self.velocity = [0, 0]
 
+    # Move and kick ball method
+
     def move_ball(self, force):
         self.velocity[0] += force[0]
         self.velocity[1] += force[1]
-
+        
+    # Update position and behavior of ball    
+        
     def update(self):
         if self.velocity[0] != 0 or self.velocity[1] != 0:
             self.velocity[1] += self.gravity

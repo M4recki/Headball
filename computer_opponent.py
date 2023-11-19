@@ -38,6 +38,8 @@ class ComputerOpponent(sprite.Sprite):
         self.jump_height = 15
         self.y_velocity = self.jump_height
 
+    # Animation of opponent player
+
     def animate(self, sprites):
         self.is_animating = True
         self.animated_sprites = sprites
