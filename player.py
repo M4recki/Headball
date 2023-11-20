@@ -1,22 +1,25 @@
 from pygame import sprite, transform
 from image_loader import load_images_for_animation
+from random import choice
 
 
 class Player(sprite.Sprite):
     def __init__(self, x, y, height):
         super().__init__()
         self.is_animating = False
+        self.opponents = ("Character 02 - England", "Character 03 - Spain", "Character 04 - Japan", "Character 05 - Netherlands", "Character 06 - Portugal", "Character 07 - Germany", "Character 08 - Italy")
+        self.opponent = choice(self.opponents)
         self.run_left_sprites = load_images_for_animation(
-            "game assets/Characters/Character 01 - Brazil/PNG Sequences/Move Backward"
+            f"game assets/Characters/{self.opponent}/PNG Sequences/Move Backward"
         )
         self.run_right_sprites = load_images_for_animation(
-            "game assets/Characters/Character 01 - Brazil/PNG Sequences/Move Forward"
+            f"game assets/Characters/{self.opponent}/PNG Sequences/Move Forward"
         )
         self.jump_sprites = load_images_for_animation(
-            "game assets/Characters/Character 01 - Brazil/PNG Sequences/Jump"
+            f"game assets/Characters/{self.opponent}/PNG Sequences/Jump"
         )
         self.kick_sprites = load_images_for_animation(
-            "game assets/Characters/Character 01 - Brazil/PNG Sequences/Kick"
+            f"game assets/Characters/{self.opponent}/PNG Sequences/Kick"
         )
         self.current_sprite = 0
         self.jump = False

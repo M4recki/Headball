@@ -6,8 +6,6 @@ from goal import Goal
 from score import Score
 import pygame as pg
 import sys
-from time import sleep
-
 
 pg.init()
 
@@ -97,6 +95,7 @@ while running:
         elif event.type == kick_cooldown:
             kick_disabled = False
         elif event.type == countdown_event:
+            player_1.rect.y = player_1_y
             if countdown > 0:
                 countdown_sound.play()
                 countdown_text = countdown_font.render(
@@ -178,6 +177,12 @@ while running:
         ball.move_ball([2.5, -15.5])
         kick_disabled = True
         pg.time.set_timer(kick_cooldown, 50)
+
+    # Check if the ball hit the top of the goal
+    if ball.rect.colliderect(goal_1.rect) and ball.rect.top <= goal_1.rect.top:
+        ball.velocity[1] = -ball.velocity[1]
+    elif ball.rect.colliderect(goal_2.rect) and ball.rect.top <= goal_2.rect.top:
+        ball.velocity[1] = -ball.velocity[1]
 
     # Check if a goal has been scored
 
